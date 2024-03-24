@@ -3,17 +3,21 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
-	LANG            = "pt-pt"
-	MIN_WORD_LENGTH = 3
+	LANG = "pt-pt"
 )
 
 func main() {
 	lang := LANG
 
 	letters, err := parseInputLetters(os.Args)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	words, err := loadDictionary(lang)
 	if err != nil {
@@ -30,15 +34,12 @@ func main() {
 
 func parseInputLetters(args []string) ([]rune, error) {
 	if len(args) < 2 {
-		return nil, fmt.Errorf("Usage: %s <letters>", args[0])
+		return nil, fmt.Errorf("usage: %s <letters>", args[0])
 	}
 
 	letters := args[1]
-	if len(letters) < MIN_WORD_LENGTH {
-		return nil, fmt.Errorf("At least %d letters are required", MIN_WORD_LENGTH)
-	}
 
-	letters = normalizeWord(letters)
+	letters = strings.ToLower(letters)
 
 	return []rune(letters), nil
 }
@@ -65,14 +66,9 @@ func loadDictionary(lang string) ([]string, error) {
 
 func filterWords(words []string, letters []rune) []string {
 	var filtered []string
+	lettersLen := len(letters)
 	for _, word := range words {
-		word = normalizeWord(word)
-
-		if len(word) < MIN_WORD_LENGTH {
-			continue
-		}
-
-		if len(word) > len(letters) {
+		if len(word) > lettersLen {
 			continue
 		}
 
@@ -82,21 +78,6 @@ func filterWords(words []string, letters []rune) []string {
 	}
 
 	return filtered
-}
-
-func normalizeWord(word string) string {
-	var normalized []rune
-	for _, letter := range word {
-		if letter >= 'A' && letter <= 'Z' {
-			letter += 32
-		}
-
-		if letter >= 'a' && letter <= 'z' {
-			normalized = append(normalized, letter)
-		}
-	}
-
-	return string(normalized)
 }
 
 func isWordInLetters(word string, letters []rune) bool {
